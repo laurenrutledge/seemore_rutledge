@@ -49,6 +49,8 @@ def init_pytorch_distributed_mode(config):
 
     # Initializing the Distributed Process Group now:
     dist.init_process_group(backend='nccl', init_method='env://')
+
+    # Use dist.barrier() to ensure all processes are being synched
     dist.barrier()
 
 
@@ -62,7 +64,7 @@ def is_process_main_process(config):
     """
     This function confirms whether the process that is occurring is the main one
     (rank 0 process), which is important to know because only the main process should be
-    writing the logs.
+    writing the logs (we do not want duplicate logging).
 
     Args:
         config (dict): the training configuration dictionary

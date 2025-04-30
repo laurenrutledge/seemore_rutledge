@@ -14,8 +14,9 @@ Date: April 2025
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, DistributedSampler
 from torch.amp import GradScaler, autocast
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 from modules.vision_language_model import VisionLanguageModel
 from training.distributed import(
@@ -39,7 +40,8 @@ def train_model(config):
     """
 
     # 1a. Initialize the Distributed Training (if it is enabled):
-    if config.get("distributed", False):
+    is_distributed = config.get("distributed", False)
+    if is_distributed:
         device = init_pytorch_distributed_mode(config)
     else:
     # 1b. If not enabled, select the compute device:
@@ -59,6 +61,10 @@ def train_model(config):
                                 emb_dropout=config['dropout'],
                                 blk_dropout=config['dropout']).to(device)
 
+
+    # Wrap Model with DDP if using distributed training:
+    if is_distributed:
+        model = DDP(model, device_ids=[config['local_rank']], output_device=config['local_rank'])
 
     # Delete below for actual implementation -:
 
