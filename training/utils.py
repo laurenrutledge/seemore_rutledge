@@ -7,6 +7,7 @@ in train_model.py, which is a file that facilitiates the training for the Seemor
 Author: Lauren Rutledge
 Date: April 2025
 """
+
 import base64
 import io
 import torch
