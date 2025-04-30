@@ -35,7 +35,7 @@ batch_size: 32                      # Batch Size for training
 learning_rate: 1e-4                 # Initial Learning Rate (for AdamW from blog post)
 weight_decay: 0.01                  # Regularization / weighted (L2)
 num_epochs: 5                       # Total number of training epochs (trials)
-logging_interval: 10                # The number of steps taken between each log of the training loss
+log_interval: 10                # The number of steps taken between each log of the training loss
 
 distributed: false
 use_amp: false
