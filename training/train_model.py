@@ -25,6 +25,7 @@ from modules.vision_language_model import VisionLanguageModel
 from training.distributed import(
     init_pytorch_distributed_mode, is_process_main_process, clean_up_distribution)
 from training.utils import CSVBase64ImageDataset
+from training.logging import log_iteration_loss, log_epoch_ending, log_validation_loss
 
 
 
@@ -113,8 +114,13 @@ def train_model(config):
 
 
     # 5. Begin Training!
+    global_step = 0
     model.train()
+
+    # For loop over each epoch necessary (1 epoch = 1 run through dataset)
     for epoch in range(config["num_epochs"]):
+
+        #
         for step, (images, captions) in enumerate(train_loader):
             images, captions = images.to(device), captions.to(device)
 
@@ -127,9 +133,6 @@ def train_model(config):
                 # Make sure the input is now used to predict the NEXT token:
                 # Align logits and targets to the same length (20 → 19)
                 targets = captions[:, 1:]  # targets = next tokens
-
-                print("logits shape:", logits.shape)
-                print("targets shape:", targets.shape)
 
                 # Align predictions to targets (cut off last logit step)
                 logits = logits[:, :targets.size(1), :]
@@ -145,11 +148,14 @@ def train_model(config):
             scaler.step(optimizer)
             scaler.update()
 
-            if step % config["log_interval"] == 0 and is_process_main_process(config):
-                print(f"[Epoch {epoch}] Step {step} | Loss {loss.item():.4f}")
+            # Log More steps in smaller datasets!
+            if config["log_interval"] <= 1 or step % config["log_interval"] == 0:
+                log_iteration_loss(global_step, loss.item())
+
+            global_step += 1
 
         if is_process_main_process(config):
-            print(f"End of epoch {epoch} \n")
+            log_epoch_ending(epoch)
 
             model.eval()
             val_loss_total = 0.0
@@ -163,9 +169,11 @@ def train_model(config):
                     val_loss = criterion(val_logits.reshape(-1, val_logits.size(-1)), val_targets.reshape(-1))
                     val_loss_total += val_loss.item()
 
-            avg_val_loss = val_loss_total / len(val_loader)
-            print(f"[Validation] Average Loss after Epoch {epoch}: {avg_val_loss:.4f}")
+            # If len(val_loader) == 0, make sure no division by 0
+            avg_val_loss = val_loss_total / max(1, len(val_loader))
+            log_validation_loss(global_step, avg_val_loss)
             model.train()
+
 
     if is_distributed:
         clean_up_distribution()

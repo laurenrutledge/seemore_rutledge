@@ -11,17 +11,38 @@ Date: April 2025
 """
 
 
-def log_iteration_loss(step: int, loss: float):
+def log_iteration_loss(global_iteration, loss):
     """
     This function is responsible for printing the training loss at the end of each
     ITERATION, or a single parameter update step (one batch has been processed).
+
+    Args:
+        global_iteration (int): The current iteration number across all epochs
+        loss (float): The loss value that is to be reported at the end of each epoch
     """
 
+    print(f"Loss at iteration {global_iteration}: {loss:.4f}")
 
 
-def log_epoch_ending(epoch: int):
+
+def log_epoch_ending(epoch):
+    """
+    This function will print a message at the end of each training epoch.
+
+    Args:
+        epoch (int): The current epoch number / index
     """
 
-    :param epoch:
-    :return:
+    print(f"At end of epoch: {epoch}\n")
+
+
+def log_validation_loss(epoch, average_val_loss):
     """
+    This function is responsible for printing the validation loss at the end of an epoch
+
+    Args:
+        epoch (int): The current epoch number / index
+        average_val_loss (float): The average loss on the validation set.
+    """
+
+    print(f"Validation Loss after epoch {epoch}: {average_val_loss:.4f}")
