@@ -1,7 +1,7 @@
 """
 train_model.py
 
-This file contains the training loop that is executed when wanting to run the
+This file contains the training loop logic that is executed when wanting to run the
 Seemore Vision Language Model. The loop undergoes the following:
     1. The Model sets itself up using configs
     2. Data is loaded, training is initiated
@@ -15,11 +15,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler
+from torch.amp import GradScaler, autocast
 
 from modules.vision_language_model import VisionLanguageModel
 from training.distributed import(
     init_pytorch_distributed_mode, is_process_main_process, clean_up_distribution)
+
 
 
 
@@ -59,4 +60,45 @@ def train_model(config):
                                 blk_dropout=config['dropout']).to(device)
 
 
+    # Delete below for actual implementation -:
 
+    dummy_images = torch.randn(100, 3, config['img_size'], config['img_size'])
+    dummy_labels = torch.randint(0, config['vocab_size'], (100, 20))
+
+    dataset = torch.utils.data.TensorDataset(dummy_images, dummy_labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=config['batch_size'])
+
+    # 4. Set up optimizer, loss, AMP
+
+    optimizer = optim.AdamW(model.parameters(),
+                            lr=float(config['learning_rate']),
+                            weight_decay=float(config['weight_decay']))
+    criterion = nn.CrossEntropyLoss()
+    scaler = GradScaler(enabled=config.get("use_amp", False))
+
+    # 5. Run the training loop
+    model.train()
+    for epoch in range(config['num_epochs']):
+        for step, (images, targets) in enumerate(dataloader):
+            images, targets = images.to(device), targets.to(device)
+
+            optimizer.zero_grad()
+
+            with autocast(device_type=device.type, enabled=config.get("use_amp", False)):
+                logits = model(images, targets[:, :-1])
+                T = min(logits.size(1), targets[:, 1:].size(1))  # align sequence length
+                loss = criterion(logits[:, :T].reshape(-1, logits.size(-1)), targets[:, 1:1 + T].reshape(-1))
+
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+            #if step % config['log_interval'] == 0 and is_process_main_process(config):
+                #print(f"[Epoch {epoch}] Step {step} | Loss: {loss.item():.4f}")
+
+        if is_process_main_process(config):
+            print(f"Validation (not implemented) | End of Epoch {epoch}\n")
+
+    # Clean up distributed resources if needed
+    if config.get("distributed", False):
+        clean_up_distribution()

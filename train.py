@@ -4,7 +4,9 @@ train.py
 
 This file contains the command-line interface "entry point" to begin training for the Seemore
 Vision Language Model. The script will parse command-line arguments, then load configs from the
-YAML file, and then follow the "training loop" described in ./training/train_model.py
+YAML file, and then follow the "training loop" described in ./training/train_model.py. This file
+was created to allow for flexibility, scriptability, and reproducibility to hopefully make it useful
+for testing and debugging if used again.
 
 Author: Lauren Rutledge
 Date: April 2025
