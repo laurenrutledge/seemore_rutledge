@@ -39,3 +39,11 @@ log_interval: 10                    # The number of steps taken between each log
 
 distributed: false
 use_amp: false
+
+
+# ----------------------------
+# Checkpointing Settings
+# ----------------------------
+save_checkpoints: true
+checkpoint_dir: checkpoints
+checkpoint_metric: val_loss   # future-proof: could support other metrics

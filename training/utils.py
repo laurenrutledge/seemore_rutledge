@@ -21,7 +21,7 @@ import torchvision.transforms as transforms
 
 class CSVBase64ImageDataset(Dataset):
     """
-    This function creates a Custom Pytorch Dataset to load base64-encoded images and text captions from a
+    This class creates a Custom Pytorch Dataset to load base64-encoded images and text captions from a
     CSV input file (as of now, this is specific to the file in images/inputs.csv)
 
     CSV Format:

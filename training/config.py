@@ -106,3 +106,5 @@ def merge_config(cli_args: argparse.Namespace, yaml_config: dict) -> dict:
         config["log_wandb"] = str_to_bool(cli_args.log_wandb)
 
     return config
+
+
