@@ -86,3 +86,42 @@ def plot_loss_curve(csv_path, output_dir="logs"):
     plt.savefig(output_path)
     plt.close()
 
+
+def plot_timing_metrics(csv_path="logs/timing_logs.csv", output_dir="logs"):
+    """
+    This function reads the CSV of timing metrics per iteration (the timing_logs.csv)
+    and plots the iteration time, forward pass time, and backward pass time.
+
+    Args:
+        csv_path (str): Path to the CSV file with timing metrics
+        output_dir (str): Directory where the timing plot will be saved
+    """
+
+    iterations, iteration_times, forward_times, backward_times = [], [], [], []
+
+    with open(csv_path, mode="r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            iterations.append(int(row["iteration"]))
+            iteration_times.append(float(row["iteration_time"]))
+            forward_times.append(float(row["forward_time"]))
+            backward_times.append(float(row["backward_time"]))
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(iterations, iteration_times, label="Total Iteration Time")
+    plt.plot(iterations, forward_times, label="Forward Pass Time")
+    plt.plot(iterations, backward_times, label="Backward Pass Time")
+    plt.xlabel("Iteration")
+    plt.ylabel("Time (seconds)")
+    plt.title("Iteration Timing Breakdown")
+    plt.legend()
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "timing_curve.png")
+    plt.savefig(output_path)
+    plt.close()
+    print(f"[Timing Plot Saved] → {output_path}")
+
+
+

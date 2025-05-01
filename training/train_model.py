@@ -25,8 +25,10 @@ from modules.vision_language_model import VisionLanguageModel
 from training.distributed import(
     init_pytorch_distributed_mode, is_process_main_process, clean_up_distribution)
 from training.utils import CSVBase64ImageDataset
-from training.logging import log_iteration_loss, log_epoch_ending, log_validation_loss
-from training.visualization import initialize_loss_tracking, log_losses_to_csv, plot_loss_curve
+from training.training_logger import log_iteration_loss, log_epoch_ending, log_validation_loss
+from training.visualization import initialize_loss_tracking, log_losses_to_csv, plot_loss_curve, plot_timing_metrics
+from training.profiling import initialize_timing_log, initialize_timing_log_csv, start_timer, end_timer
+
 
 
 
@@ -117,6 +119,7 @@ def train_model(config):
     # 5a. Initialize CSV Logging before training begins!
     if is_process_main_process(config):
         initialize_loss_tracking()
+        initialize_timing_log()
 
     # 5b. Begin actual Training!
     global_step = 0
@@ -128,10 +131,13 @@ def train_model(config):
         train_loss_total = 0.0
 
         for step, (images, captions) in enumerate(train_loader):
+            iteration_timer_start = start_timer()
             images, captions = images.to(device), captions.to(device)
 
             optimizer.zero_grad()
 
+
+            forward_timer_start = start_timer()
             # Make sure autocast can handle "cuda" AND "cpu" - dependent on which device currently being used
             with autocast(device_type=device.type, enabled=use_amp):
                 logits = model(images, captions[:, :-1])  # decoder input = captions without last token
@@ -148,17 +154,24 @@ def train_model(config):
                     logits.contiguous().view(-1, logits.size(-1)),  # → [3*19, 100]
                     targets.contiguous().view(-1)  # → [3*19]
                 )
+                forward_time = end_timer(forward_timer_start)
                 train_loss_total += loss.item()
 
+            backward_timer_start = start_timer()
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
+            backward_time = end_timer(backward_timer_start)
+
+            iteration_time = end_timer(iteration_timer_start)
 
             # Log More steps in smaller datasets!
             if config["log_interval"] <= 1 or step % config["log_interval"] == 0:
                 log_iteration_loss(global_step, loss.item())
+                initialize_timing_log_csv(global_step, iteration_time, forward_time, backward_time)
 
             global_step += 1
+
 
         if is_process_main_process(config):
             log_epoch_ending(epoch)
@@ -184,7 +197,8 @@ def train_model(config):
 
     if is_process_main_process(config):
         plot_loss_curve("logs/losses_log.csv", "logs/loss_curve.png")
-        print("Saved training curve to logs/loss_curve.png")
+        plot_timing_metrics("logs/timing_logs.csv", "logs/timing_curve.png")
+        print("Saved training curve to logs/loss_curve.png and the timing metrics to logs/timing_metrics.csv")
 
 
     if is_distributed:

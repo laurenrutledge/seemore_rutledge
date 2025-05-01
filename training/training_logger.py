@@ -1,10 +1,15 @@
 """
-logging.py
+training_logger.py
 
 This file contains the logging functions for the Seemore Vision Language Model training process.
 Specifically, it contains the print statements that are called upon at the end of each epoch /
 iteration during the training. The goal of this file was to ensure that model training, validations,
 and performance statistics can be consistently tracked and / or referenced throughout the process.
+
+training_logger.py is different from profiling.py in that it records semantic training progress like:
+- loss at iteration
+- validation loss per epoch
+- epoch completion markers
 
 Author: Lauren Rutledge
 Date: April 2025
