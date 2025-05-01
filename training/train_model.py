@@ -26,6 +26,7 @@ from training.distributed import(
     init_pytorch_distributed_mode, is_process_main_process, clean_up_distribution)
 from training.utils import CSVBase64ImageDataset
 from training.logging import log_iteration_loss, log_epoch_ending, log_validation_loss
+from training.visualization import initialize_loss_tracking, log_losses_to_csv, plot_loss_curve
 
 
 
@@ -113,14 +114,19 @@ def train_model(config):
     scaler = GradScaler(enabled=use_amp)
 
 
-    # 5. Begin Training!
+    # 5a. Initialize CSV Logging before training begins!
+    if is_process_main_process(config):
+        initialize_loss_tracking()
+
+    # 5b. Begin actual Training!
     global_step = 0
     model.train()
 
     # For loop over each epoch necessary (1 epoch = 1 run through dataset)
     for epoch in range(config["num_epochs"]):
 
-        #
+        train_loss_total = 0.0
+
         for step, (images, captions) in enumerate(train_loader):
             images, captions = images.to(device), captions.to(device)
 
@@ -142,7 +148,7 @@ def train_model(config):
                     logits.contiguous().view(-1, logits.size(-1)),  # → [3*19, 100]
                     targets.contiguous().view(-1)  # → [3*19]
                 )
-
+                train_loss_total += loss.item()
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -171,8 +177,14 @@ def train_model(config):
 
             # If len(val_loader) == 0, make sure no division by 0
             avg_val_loss = val_loss_total / max(1, len(val_loader))
+            avg_train_loss = train_loss_total / max(1, len(train_loader))
             log_validation_loss(global_step, avg_val_loss)
+            log_losses_to_csv("logs/losses_log.csv", epoch, avg_train_loss, avg_val_loss)
             model.train()
+
+    if is_process_main_process(config):
+        plot_loss_curve("logs/losses_log.csv", "logs/loss_curve.png")
+        print("Saved training curve to logs/loss_curve.png")
 
 
     if is_distributed:
