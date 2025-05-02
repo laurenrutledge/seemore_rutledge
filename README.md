@@ -110,9 +110,9 @@ ___
   
 ---
 ### Author:
-Lauren Rutledge
-MS Candidate; Mathematical & Computational Engineering
-April 2025
+Lauren Rutledge   
+MS Candidate; Mathematical & Computational Engineering  
+April 2025  
 
 
 
