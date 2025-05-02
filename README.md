@@ -55,7 +55,7 @@ seemore_rutledge_1/
 │
 ├── checkpoints/                   # Saved model checkpoints (.pth files)
 │
-├── not_used_for_assignment/       # Archived notebooks/scripts not used in final submission
+├── not_used_for_assignment/       # Archived notebooks/scripts not used in Lauren's training remodeling
 │
 ├── train.py                       # CLI entry point to launch training with selected config
 ├── README.md                      # Project documentation
@@ -121,5 +121,10 @@ python train.py --config configs/default.yaml --device cuda --run_name debug_amp
 ```sh
 jupyter notebook eda_mean_time_per_swim_event_vs_age_of_swimmer/calculating_mean_time_per_swim_event_as_function_of_age.ipynb
 
+
+---
+### Author:
+Lauren Rutledge
+April 2025
 
 
