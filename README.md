@@ -25,26 +25,42 @@ The motivation of the re-design was to transform a basic training loop into a ma
 
 ## Repository Structure: 
 ```plaintext
- seemore/
+seemore_rutledge_1/
 ├── configs/
-│   └── default.yaml
-├── training/
-│   ├── train_model.py
-│   ├── helpers.py
-│   ├── config.py
-│   ├── checkpointing.py
-│   ├── profiling.py
-│   ├── training_logger.py
-│   ├── utils.py
-├── run_training.py
-├── images/
-│   └── inputs.csv
-├── logs/
-│   ├── losses_log.csv
-│   ├── timing_logs.csv
-│   └── *.png
-└── checkpoints/
-    └── *.pth
+│   └── default.yaml               # YAML configuration for training parameters and model architecture
+│
+├── training/                      # Core training logic and utilities
+│   ├── train_model.py             # Main training loop implementation
+│   ├── helpers.py                 # Model, optimizer, dataloader, and AMP setup
+│   ├── config.py                  # YAML + CLI configuration merging logic
+│   ├── checkpointing.py           # Model checkpoint saving based on validation loss
+│   ├── profiling.py               # Timing utilities and plotting for forward/backward/total time
+│   ├── training_logger.py         # Iteration and epoch logging functions
+│   └── utils.py                   # Custom Dataset loader for base64-encoded image-caption CSV
+│
+├── modules/                       # Model architecture components
+│   ├── vision_language_model.py   # Main Vision-Language Model (ViT + Decoder)
+│   ├── decoder_language_model.py  # Decoder used in VLM (used, but not modified by Lauren)
+│   ├── vision_transformer.py      # Vision Transformer encoder (used, but not modified)
+│   ├── patch_embeddings.py        # Embeds image patches into vectors (used by ViT)
+│   ├── block.py                   # Transformer block used in ViT
+│   ├── attention.py               # Multi-head self-attention mechanism
+│   └── multimodal_projector.py    # Projects image embeddings to decoder space
+│
+├── logs/                          # Output logs and visualizations
+│   ├── loss_curve.png             # Training and validation loss plot
+│   ├── timing_curve.png           # Forward, backward, and total iteration time plot
+│   ├── losses_log.csv             # CSV of per-epoch train/val loss
+│   └── timing_logs.csv            # CSV of per-iteration timing breakdown
+│
+├── checkpoints/                   # Saved model checkpoints (.pth files)
+│
+├── not_used_for_assignment/       # Archived notebooks/scripts not used in final submission
+│
+├── train.py                       # CLI entry point to launch training with selected config
+├── README.md                      # Project documentation
+├── LICENSE                        # Project license file
+└── .gitignore                     # Git ignore rules (e.g., logs, checkpoints, data)
 
 ```
 
@@ -79,36 +95,31 @@ ___
 - First, activate the Conda environment and install the required dependencies:
 
 ```sh
-conda create --name cs229_project_env python=3.10
-conda activate cs229_project_env
+conda create --name seemore_env python=3.10
+conda activate seemore_env
 pip install -r requirements.txt
 ```
 
-### 2. Obtain the Data
-- Ensure you have the cleaned dataset ready:
-- Use swimmers_cleaned.csv located in the usaa_swim_data/ directory
+### 2. Configure Parameters 
+- Open the file: ./configs/default.yaml and ensure that you specify:
+   - Desired Model Architecture (layers, heads, embedding sized)
+   - Desired Training Parameters (num_epochs, learning_rate, batch_size)
+   - Desired AMP, checkpointing, and logging preferences 
 
-### 3. Run Feature Engineering
-- Execute the feature engineering script to generate additional features:
+### 3. Begin Training! 
+- Execute the training entry script using the configurations saved in default.yaml
 ```sh
-jupyter notebook feature_engineering/adding_features_to_dataset.ipynb
+python train.py --config configs/default.yaml
 ```
+- Or, if there is a desire to override config options via CLI, execute: 
+```sh
+python train.py --config configs/default.yaml --device cuda --run_name debug_amp --log_wandb false
+```
+
 ### 4. Run Exploratory Data Analysis (EDA)
 - To analyze swim event performance as a function of age, run: 
 ```sh
 jupyter notebook eda_mean_time_per_swim_event_vs_age_of_swimmer/calculating_mean_time_per_swim_event_as_function_of_age.ipynb
-```
-### 5. Run ARIMA Model
-- To compute ARIMA-based predictions for event specialization, execute:
-```sh
-jupyter notebook arima/calculate_mean_time_per_event_specialized_vs_non_specialized.ipynb
-```
-### 6. Run Multi-Output Regression
-- To train and evaluate the multi-output regression model:
-```sh
-jupyter notebook multi_output_regression/multi_output_regression_v2.ipynb
-```
-
 
 
 
