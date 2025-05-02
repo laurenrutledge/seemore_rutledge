@@ -1,9 +1,17 @@
 # Seemore VLM — Training Loop Redesign
 
 ## Overview: 
-This project contains an extended and modular training framework for the **Seemore Vision-Language Model**. 
+This project contains an extended and modular training framework for the **Seemore Vision-Language Model (VLM)**. 
 
-The motivation of the re-design was to transform a basic training loop into a production-grade, scalable, and trackable system that can be executed on either a multi-GPU / multi-node (while also using distributed training), or a cpu.
+The motivation of the re-design was to transform a basic training loop into a mature system capable of supporting: 
+- Distributed training across multiple GPUs or nodes (while also allowing for the loop to be executed on a cpu if multiple GPUs / nodes are not available)
+- Mixed Precision for time and storage efficiency 
+- Configurable hyperparameters and logging
+- Checkpointing and profiling for reproducibility and performance insight
+
+-----
+
+
 
 ### Summary of Key Features Implemented: 
 - **Configurable Training**
