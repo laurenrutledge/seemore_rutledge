@@ -14,7 +14,7 @@ The motivation of the re-design was to transform a basic training loop into a ma
 
 While working on the assignment, the following features were focused upon: 
 
-**Note, and all key additions to the training loop (written by Lauren for this assignment) were implemented in python files located in the ./training directory** 
+**Note: All key additions to the training loop (implemented by Lauren as part of this assignment) are located in the ./training/ directory** 
 
 ### Summary of Key Features Implemented: 
 - **Configurable Training** via the 'default.yaml' file, while also allowing for CLI overrides 
@@ -78,14 +78,27 @@ conda create --name seemore_env python=3.10
 conda activate seemore_env
 pip install -r requirements.txt
 ```
+### 2. Prepare Input Data
+- Ensure that you have a base64-encoded image-caption dataset saved as:
+     ```sh
+   ./images/inputs.csv
+      ```
+- In the file, each row should include:
+   - `b64string_images`: the base64-encoded image
+   - `caption`: the associated text caption
 
-### 2. Configure Parameters 
+If this file is missing or incorrectly formatted, training will not start.
+
+- Note: With more time, support for additional input formats (e.g., raw image folders or JSON-based datasets) could be added as a next step! 
+
+  
+### 3. Configure Parameters 
 - Open the file: ./configs/default.yaml and specify:
-   - Desired Model Architecture (layers, heads, embedding sized)
+   - Desired Model Architecture (layers, heads, embedding sizes)
    - Desired Training Parameters (num_epochs, learning_rate, batch_size)
    - Desired AMP, checkpointing, and logging preferences 
 
-### 3. Begin Training! 
+### 4. Begin Training! 
 - Execute the training entry script using the configurations saved in default.yaml
 ```sh
 python train.py --config configs/default.yaml
