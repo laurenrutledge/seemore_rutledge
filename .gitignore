@@ -1,1 +1,12 @@
+# Ignore checkpoints, logs, large datasets
+checkpoints/
+
 input.txt
+
+*.pth
+
+
+# Python & system junk
+__pycache__/
+*.pyc
+.DS_Store
