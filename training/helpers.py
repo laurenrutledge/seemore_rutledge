@@ -3,11 +3,11 @@ helpers.py
 
 This file contains all of the helper functions referenced in train_model.py, which is the
 main training loop for the Seemore Vision-Language Model. These include the helpers for:
-- Setting up the model
-- Loading the data into the model
-- Managing Optimization and AMP
-- Executing the Training Steps
-- Evaluating the Model's Validation Losses
+- Device and model setup (with DDP support)
+- Data loading and splitting
+- Optimizer, loss function, and AMP setup
+- One training step with optional mixed precision
+- Validation loop with average loss calculation
 
 Author: Lauren Rutledge
 Date: April 2025
@@ -75,23 +75,27 @@ def setup_data_loaders(config, is_distributed):
         is_distributed (bool): Whether or not we are using distributed training (DDP).
     """
 
+    # Locate the input CSV file
     current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     csv_path = os.path.join(current_dir, 'images', 'inputs.csv')
+
+    # Load the full dataset from CSV
     full_dataset = CSVBase64ImageDataset(csv_path, config["img_size"])
 
+    # Split dataset into training and validation sets
     train_val_ratio = config.get("train_val_split", 0.8)
     train_size = int(train_val_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
-
+    # Use DistributedSampler in DDP mode to avoid data duplication across workers
     if is_distributed:
         train_sampler = DistributedSampler(train_dataset, num_replicas=config['world_size'], rank=config['rank'])
         train_loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=config["batch_size"])
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
     else:
         train_loader = DataLoader(train_dataset, shuffle=True, batch_size=config["batch_size"])
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
+
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
 
     return train_loader, val_loader
 
@@ -113,7 +117,10 @@ def setup_optimizer_and_amp(config, model, device):
         weight_decay=float(config["weight_decay"])
     )
 
+    # Standard cross-entropy loss for classification tasks
     criterion = nn.CrossEntropyLoss()
+
+    # Enable AMP if specified and device is CUDA
     use_amp = config.get("amp", False) and device.type == "cuda"
     scaler = GradScaler(enabled=use_amp)
 
@@ -141,27 +148,42 @@ def training_step(model, images, captions, optimizer, criterion, scaler, device,
     """
 
     iteration_start = start_timer()
+
+    # Move inputs to the device
     images, captions = images.to(device), captions.to(device)
 
+    # Zero the gradients from the previous iteration
     optimizer.zero_grad()
 
+    # ---- Forward Pass ----
     forward_start = start_timer()
     with autocast(device_type=device.type, enabled=use_amp):
-        # First, we shift the input images / captions for the decoder to properly read
+        # Shift captions to align inputs (tokens 0 to N-1) and targets (tokens 1 to N)
         logits = model(images, captions[:, :-1])
+
         # Create target variable to be able to predict next token
         targets = captions[:, 1:]
+
         # Now, we align time dimensions
         logits = logits[:, :targets.size(1), :]
+
+        # Flatten for cross-entropy computation
         loss = criterion(
             logits.contiguous().view(-1, logits.size(-1)),
             targets.contiguous().view(-1)
         )
     forward_time = end_timer(forward_start)
 
+    # ---- Backward Pass ----
     backward_start = start_timer()
+
+    # Backpropagate scaled loss
     scaler.scale(loss).backward()
+
+    # Optimizer step
     scaler.step(optimizer)
+
+    # Update scaler for AMP
     scaler.update()
     backward_time = end_timer(backward_start)
 
@@ -180,6 +202,7 @@ def validation_step(model, val_loader, criterion, device):
         device (torch.device): The device used for training / computation
     """
 
+    # Set model to evaluation mode
     model.eval()
     total_val_loss = 0.0
 
@@ -189,12 +212,16 @@ def validation_step(model, val_loader, criterion, device):
 
             # Get input captions (all but the last token)
 
+            # Forward pass on validation data
             val_logits = model(val_images, val_captions[:, :-1])
             val_logits = val_logits[:, :-1, :]
             val_targets = val_captions[:, 1:]
+
+            # Compute validation loss
             val_loss = criterion(val_logits.reshape(-1, val_logits.size(-1)), val_targets.reshape(-1))
             total_val_loss += val_loss.item()
 
+    # Set back to training mod
     model.train()
 
     return total_val_loss / max(1, len(val_loader))
