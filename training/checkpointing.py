@@ -1,7 +1,12 @@
 """
 checkpointing.py
 
-This file
+This module defines the checkpointing utility used during training of the Seemore Vision-Language Model.
+It saves the model's state_dict when validation loss improves, and supports both single-device and
+DistributedDataParallel (DDP) training modes.
+
+Author: Lauren Rutledge
+Date: April 2025
 """
 
 

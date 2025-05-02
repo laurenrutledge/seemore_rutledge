@@ -2,7 +2,7 @@
 utils.py
 
 This file contains the implementation of a few utility functions and classes that are needed
-in train_model.py, which is a file that facilitiates the training for the Seemore Vision Language Model.
+in train_model.py, which is a file that facilitates the training for the Seemore Vision Language Model.
 
 Author: Lauren Rutledge
 Date: April 2025
