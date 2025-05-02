@@ -1,4 +1,4 @@
-# Ignore checkpoints, logs, large datasets
+# Ignore checkpoints, logs, large datasets for pushing to repo
 checkpoints/
 
 input.txt
