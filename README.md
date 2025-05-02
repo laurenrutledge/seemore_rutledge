@@ -5,22 +5,23 @@ This project contains an extended and modular training framework for the **Seemo
 
 The motivation of the re-design was to transform a basic training loop into a mature system capable of supporting: 
 - Distributed training across multiple GPUs or nodes (while also allowing for the loop to be executed on a cpu if multiple GPUs / nodes are not available)
-- Mixed Precision for time and storage efficiency 
-- Configurable hyperparameters and logging
-- Checkpointing and profiling for reproducibility and performance insight
+- Automatic Mixed Precision (AMP) for improved time and storage efficiency
+- YAML-configurable Hyperparameters that also allows for CLI overrides 
+- Loss Logging, Profiling, and Visualization
+- Checkpointing and profiling for reproducibility and validation performance
 
 -----
 
-
+While working on the assignment, the following features were focused upon: 
 
 ### Summary of Key Features Implemented: 
-- **Configurable Training**
-- **Distributed Training**
-- **Automatic Mixed Precision (AMP)**
-- **Checkpointing**
-- **Loss Tracking & Visualization**
-- **Profiling of Iteration Timing & Visualization**
-- **Dataset Loader** to accomodate base64-encoded images and captions from CSV 
+- **Configurable Training** via the 'default.yaml' file, while also allowing for CLI overrides 
+- **Distributed Training** via Pytorch's Distributed Data Parallel (DDP)
+- **Automatic Mixed Precision (AMP) Support** to allow for faster GPU training
+- **Checkpointing** of the best-performing models 
+- **Loss Tracking & Visualization** to confirm that loss functions were working as expected 
+- **Profiling of Iteration Timing & Visualization**, outputted in CSV and PNG formats
+- **Dataset Loader** to accomodate base64-encoded images and captions in CSV format  
 -----
 
 ## Repository Structure: 
@@ -63,30 +64,6 @@ seemore_rutledge_1/
 └── .gitignore                     # Git ignore rules (e.g., logs, checkpoints, data)
 
 ```
-
----
-
-## Methodology:
-### Data Preprocessing: 
-- Used USA Swimming records to filter and clean historical race data
-- Removed non-relevant metadata to focus on performance-based attributes
-- Converted swim times into a numerical scoring system based on USA Swimming time standards
-
-### Exploratory Data Analysis (EDA):
-- Visualized performance progression across different strokes and distances
-- Analyzed variability and specialization trends in youth swim times
-
-### Predictive Modeling:
-- Baseline Model: ARIMA for time-series forecasting of swim times
-- Machine Learning Model: Multi-output regression to predict event specialization
-
----
-
-## Key Findings:
-- ARIMA provides a reasonable statistical baseline but struggles with sprint events
-- Multi-output regression improves predictive accuracy for short- and mid-distance races
-- Long-distance events show more variability, requiring additional feature engineering
-
 ___
 
 ## How to Run the Code to Replicate Project 
@@ -101,7 +78,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Parameters 
-- Open the file: ./configs/default.yaml and ensure that you specify:
+- Open the file: ./configs/default.yaml and specify:
    - Desired Model Architecture (layers, heads, embedding sized)
    - Desired Training Parameters (num_epochs, learning_rate, batch_size)
    - Desired AMP, checkpointing, and logging preferences 
@@ -116,12 +93,21 @@ python train.py --config configs/default.yaml
 python train.py --config configs/default.yaml --device cuda --run_name debug_amp --log_wandb false
 ```
 
-### 4. Run Exploratory Data Analysis (EDA)
-- To analyze swim event performance as a function of age, run: 
-```sh
-jupyter notebook eda_mean_time_per_swim_event_vs_age_of_swimmer/calculating_mean_time_per_swim_event_as_function_of_age.ipynb
-```
 
+___
+
+## Output Artifacts:
+- checkpoints/: Saved models based on best val loss
+- logs/losses_log.csv: Raw loss values per epoch
+- logs/loss_curve.png: Loss curve plot
+- logs/timing_logs.csv: Timing breakdown per iteration
+- logs/timing_curve.png: Visual timing plot (iteration/forward/backward)
+
+___
+## Final Notes: 
+- Files in the `not_used_for_assignment/` directory were preserved for reference but were not used in Lauren’s redesigned training loop.
+- This implementation assumes availability of PyTorch and (optionally) GPUs.
+  
 ---
 ### Author:
 Lauren Rutledge
