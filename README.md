@@ -68,7 +68,7 @@ seemore_rutledge_1/
 ```
 ___
 
-## How to Run the Code to Replicate Project 
+## How to Run the Code Lauren's Updated Training Loop 
 
 ### 1. Set Up the Environment
 - First, activate the Conda environment and install the required dependencies:
