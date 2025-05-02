@@ -120,7 +120,7 @@ python train.py --config configs/default.yaml --device cuda --run_name debug_amp
 - To analyze swim event performance as a function of age, run: 
 ```sh
 jupyter notebook eda_mean_time_per_swim_event_vs_age_of_swimmer/calculating_mean_time_per_swim_event_as_function_of_age.ipynb
-
+```
 
 ---
 ### Author:
