@@ -12,7 +12,7 @@ The motivation of the re-design was to transform a basic training loop into a ma
 
 -----
 
-While working on the assignment, the following features were focused upon: 
+While working on the assignment, the following features were focused upon and all implemented in python files located in the ./training directory: 
 
 ### Summary of Key Features Implemented: 
 - **Configurable Training** via the 'default.yaml' file, while also allowing for CLI overrides 
