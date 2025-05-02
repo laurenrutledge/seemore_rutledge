@@ -42,13 +42,13 @@ seemore_rutledge_1/
 │   └── utils.py                   # Custom Dataset loader for base64-encoded image-caption CSV
 │
 ├── modules/                       # Model architecture components
-│   ├── vision_language_model.py   # Main Vision-Language Model (ViT + Decoder)
+│   ├── vision_language_model.py   # Main Vision-Language Model (ViT + Decoder) (used, but not modified by Lauren)
 │   ├── decoder_language_model.py  # Decoder used in VLM (used, but not modified by Lauren)
-│   ├── vision_transformer.py      # Vision Transformer encoder (used, but not modified)
-│   ├── patch_embeddings.py        # Embeds image patches into vectors (used by ViT)
-│   ├── block.py                   # Transformer block used in ViT
-│   ├── attention.py               # Multi-head self-attention mechanism
-│   └── multimodal_projector.py    # Projects image embeddings to decoder space
+│   ├── vision_transformer.py      # Vision Transformer encoder (used, but not modified by Lauren)
+│   ├── patch_embeddings.py        # Embeds image patches into vectors (used by ViT) (used, but not modified by Lauren)
+│   ├── block.py                   # Transformer block used in ViT (used, but not modified by Lauren)
+│   ├── attention.py               # Multi-head self-attention mechanism (used, but not modified by Lauren)
+│   └── multimodal_projector.py    # Projects image embeddings to decoder space (used, but not modified by Lauren)
 │
 ├── logs/                          # Output logs and visualizations
 │   ├── loss_curve.png             # Training and validation loss plot
@@ -58,7 +58,7 @@ seemore_rutledge_1/
 │
 ├── checkpoints/                   # Saved model checkpoints (.pth files)
 │
-├── not_used_for_assignment/       # Archived notebooks/scripts not used in Lauren's training remodeling
+├── not_used_for_assignment/       # Archived notebooks/scripts not used or even referenced in Lauren's training remodeling
 │
 ├── train.py                       # CLI entry point to launch training with selected config
 ├── README.md                      # Project documentation
