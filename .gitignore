@@ -1,12 +1,12 @@
-# Ignore checkpoints, logs, large datasets for pushing to repo
+# Ignore model checkpoints and large outputs
 checkpoints/
-
-input.txt
-
 *.pth
 
+# Ignore input files (e.g., large raw input)
+input.txt
 
-# Python & system junk
+
+# Ignore Python cache and system junk
 __pycache__/
 *.pyc
 .DS_Store
