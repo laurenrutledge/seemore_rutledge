@@ -55,9 +55,10 @@ def train_model(config):
      5. The function executes the "training loop"!
 
     Args:
-        config (dict): the config dictionary that contains the model and training settings!
+        config (dict): the config dictionary that contains the model and training settings from YAML + CLI!
     """
 
+    # Check if training should run in distributed mode (DDP), default is False
     is_distributed = config.get("distributed", False)
 
     # Step 1a: Initialize distributed mode (and get correct device!)
@@ -68,13 +69,14 @@ def train_model(config):
         if is_process_main_process(config):
             print(f"Using single device setup on {device}")
 
-    # Step 1b: Setup model (DDP-wrapped if needed)
+    # Step 1b: Initialize model and move it to the correct device.
+    # Wrap with DistributedDataParallel (DDP) if using multiple GPUs.
     device, model = setup_device_and_model(config, is_distributed)
 
     # Step 2: Setup the dataloaders
     train_loader, val_loader = setup_data_loaders(config, is_distributed)
 
-    # Step 3. Setup optimizer, loss function, AMP
+    # Step 3. Setup optimizer, loss function (CrossEntropy), and AMP scaler if enabled
     optimizer, criterion, scaler, use_amp = setup_optimizer_and_amp(config, model, device)
 
     # Step 4. Setup the logging and checkpointing
@@ -90,18 +92,23 @@ def train_model(config):
     model.train()
     best_val_loss = float("inf")
 
+    # ======= Epoch-level Training Loop =======
+
     # For loop over each epoch necessary (1 epoch = 1 run through dataset)
     for epoch in range(config["num_epochs"]):
 
         train_loss_total = 0.0
 
+        # Iterate through training batches:
         for step, (images, captions) in enumerate(train_loader):
+
+            # Perform forward + backward passes, optimizer step, and track timings
             loss, forward_time, backward_time, iteration_time = training_step(
                 model, images, captions, optimizer, criterion, scaler, device, use_amp
             )
             train_loss_total += loss.item()
 
-            # Log More steps in smaller datasets!
+            # Log more steps in smaller datasets!
             if config["log_interval"] <= 1 or step % config["log_interval"] == 0:
                 log_iteration_loss(global_step, loss.item())
                 initialize_timing_log_csv(global_step, iteration_time, forward_time, backward_time)
@@ -114,8 +121,10 @@ def train_model(config):
             avg_val_loss = validation_step(model, val_loader, criterion, device)
 
             if is_distributed:
-                # Synch validtion loss across processes
+                # Synch validation loss across processes
                 val_loss_tensor = torch.tensor(avg_val_loss, device=device)
+
+                # Use all_reduce to aggregate validation loss across all distributed processes
                 torch.distributed.all_reduce(val_loss_tensor, op=torch.distributed.ReduceOp.SUM)
                 avg_val_loss = val_loss_tensor.item() / config['world_size']
 
@@ -137,5 +146,6 @@ def train_model(config):
         print("Saved training curve to logs/loss_curve.png and the timing metrics to logs/timing_metrics.csv")
 
 
+    # Clean up the distributed process group (if used)
     if is_distributed:
         clean_up_distribution()
