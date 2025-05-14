@@ -24,6 +24,12 @@ class CSVBase64ImageDataset(Dataset):
     This class creates a Custom Pytorch Dataset to load base64-encoded images and text captions from a
     CSV input file (as of now, this is specific to the file in images/inputs.csv)
 
+    Recall that torch.utils.data.Dataset is the base class for all datasets in PyTorch, meaning that it 
+    represents our data as a Python object that implements:
+        - __len__() — returns the number of samples in the dataset.
+        - __getitem__(idx) — gets a sample and its label at index idx.
+
+
     CSV Format:
         index, b64string_images, caption
 
