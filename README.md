@@ -3,6 +3,8 @@
 ## Overview: 
 This project contains an extended and modular training framework for the **Seemore Vision-Language Model (VLM)**. 
 
+The blog post [“Seemore: Implement a Vision Language Model from Scratch”](https://huggingface.co/blog/AviSoori1x/seemore-vision-language-model) served as the foundation for this project. That implementation introduces a basic vision-language model in pure PyTorch, consisting of three components: an image encoder, a multimodal projection module, and a decoder-based language model. The original post also provides a simple training loop, which this project extends and improves upon: 
+
 The motivation of the re-design was to transform a basic training loop into a mature system capable of supporting: 
 - Distributed training across multiple GPUs or nodes (while also allowing for the loop to be executed on a cpu if multiple GPUs / nodes are not available)
 - Automatic Mixed Precision (AMP) for improved time and storage efficiency
